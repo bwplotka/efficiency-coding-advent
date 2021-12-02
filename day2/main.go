@@ -209,3 +209,34 @@ func DivePart2_V4(input string) (_ int, err error) {
 	}
 	return depth * forward, nil
 }
+
+// DivePart2_V5 is optimized version of DivePart2_V3 for latency.
+// We can optimize the digit parsing further.
+func DivePart2_V5(input string) (_ int, err error) {
+	var aim, forward, depth int
+	var line string
+	for len(input) > 0 {
+		i := strings.IndexByte(input, '\n')
+		if i == -1 {
+			break
+		}
+		line = input[0:i]
+		input = input[i+1:]
+
+		// Last char is digit.
+		digit := int(line[len(line)-1] - '0')
+
+		switch line[0] {
+		case 'f':
+			forward += digit
+			depth += aim * digit
+		case 'd':
+			aim += digit
+		case 'u':
+			aim -= digit
+		default:
+			return 0, errors.Errorf("unknown direction %v", line)
+		}
+	}
+	return depth * forward, nil
+}

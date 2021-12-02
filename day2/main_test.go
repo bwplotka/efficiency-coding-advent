@@ -87,6 +87,11 @@ forward 2`,
 				testutil.Ok(t, err)
 				testutil.Equals(t, tcase.expected, ans)
 			})
+			t.Run("DivePart2_V5", func(t *testing.T) {
+				ans, err := DivePart2_V5(input)
+				testutil.Ok(t, err)
+				testutil.Equals(t, tcase.expected, ans)
+			})
 		})
 	}
 }
@@ -100,6 +105,6 @@ func BenchmarkDivePart2(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Answer, _ = DivePart2_V4(input)
+		Answer, _ = DivePart2_V5(input)
 	}
 }
