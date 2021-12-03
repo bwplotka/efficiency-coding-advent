@@ -78,6 +78,11 @@ func TestDivePart2(t *testing.T) {
 				testutil.Ok(t, err)
 				testutil.Equals(t, tcase.expected, ans)
 			})
+			t.Run("BinDiagnosePart2_V2", func(t *testing.T) {
+				ans, err := BinDiagnosePart2_V2(input)
+				testutil.Ok(t, err)
+				testutil.Equals(t, tcase.expected, ans)
+			})
 		})
 	}
 }
@@ -91,6 +96,6 @@ func BenchmarkDivePart2(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Answer, _ = BinDiagnosePart2(input)
+		Answer, _ = BinDiagnosePart2_V2(input)
 	}
 }

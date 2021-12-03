@@ -1,0 +1,11 @@
+goos: linux
+goarch: amd64
+pkg: github.com/bwplotka/efficiency-advent-2021/day3
+cpu: Intel(R) Core(TM) i7-9850H CPU @ 2.60GHz
+BenchmarkDivePart2-12    	  119662	     24227 ns/op	   16384 B/op	       2 allocs/op
+BenchmarkDivePart2-12    	   69109	     27937 ns/op	   16384 B/op	       2 allocs/op
+BenchmarkDivePart2-12    	   46735	     28740 ns/op	   16384 B/op	       2 allocs/op
+BenchmarkDivePart2-12    	   45756	     28570 ns/op	   16384 B/op	       2 allocs/op
+BenchmarkDivePart2-12    	   32374	     37923 ns/op	   16384 B/op	       2 allocs/op
+PASS
+ok  	github.com/bwplotka/efficiency-advent-2021/day3	11.077s
