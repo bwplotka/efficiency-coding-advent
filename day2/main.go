@@ -1,12 +1,21 @@
-package main
+package day2
 
 import (
+	"io/ioutil"
 	"strconv"
 	"strings"
+	"testing"
 	"text/scanner"
 
+	"github.com/efficientgo/tools/core/pkg/testutil"
 	"github.com/pkg/errors"
 )
+
+func ReadTestInput(t testing.TB) string {
+	f, err := ioutil.ReadFile("input.txt")
+	testutil.Ok(t, err)
+	return string(f)
+}
 
 func DivePart1(input string) (_ int, err error) {
 	s := scanner.Scanner{

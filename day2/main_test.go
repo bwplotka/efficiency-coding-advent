@@ -1,18 +1,11 @@
-package main
+package day2
 
 import (
-	"io/ioutil"
 	"strings"
 	"testing"
 
 	"github.com/efficientgo/tools/core/pkg/testutil"
 )
-
-func readTestInput(t testing.TB) string {
-	f, err := ioutil.ReadFile("input.txt")
-	testutil.Ok(t, err)
-	return string(f)
-}
 
 func TestDivePart1(t *testing.T) {
 	for _, tcase := range []struct {
@@ -29,7 +22,7 @@ forward 2`,
 			expected: 150,
 		},
 		{
-			input:    readTestInput(t),
+			input:    ReadTestInput(t),
 			expected: 1868935,
 		},
 	} {
@@ -60,7 +53,7 @@ forward 2`,
 			expected: 900,
 		},
 		{
-			input:    readTestInput(t),
+			input:    ReadTestInput(t),
 			expected: 1965970888,
 		},
 	} {
@@ -101,7 +94,7 @@ var Answer int
 // go test -count 5 -run '^$' -bench . -memprofile=v1.mem.pprof -cpuprofile=v1.cpu.pprof > v1.txt
 func BenchmarkDivePart2(b *testing.B) {
 	b.ReportAllocs()
-	input := strings.TrimSpace(readTestInput(b)) + "\n"
+	input := strings.TrimSpace(ReadTestInput(b)) + "\n"
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
