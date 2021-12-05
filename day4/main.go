@@ -1,7 +1,6 @@
 package day4
 
 import (
-	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -431,7 +430,6 @@ func (a *lookupArr_V2) set(digit0, digit1 uint8, order int) {
 		(*a)[digit1-numberOffset] = order
 		return
 	}
-	fmt.Println(string(digit0), string(digit1))
 	(*a)[(digit0-numberOffset)*10+digit1-numberOffset] = order
 }
 func (a *lookupArr_V2) lookup(number string) (int, bool) {
@@ -452,25 +450,25 @@ func (a *lookupArr_V2) lookup(number string) (int, bool) {
 }
 
 // BingoPart2_V4 optimized version of BingoPart2_V3. Main offendant are the number of offset calc a bit of split.
+// This is fail, it's almost the same if not worse (: V3 is the fastest!
 func BingoPart2_V4(input string) (_ int, err error) {
 	firstRowLen := strings.IndexByte(input, '\n')
-	numbersStr := strings.Split(input[:firstRowLen], ",")
-
-	// Prepare single digits, so they are easier to match.
 
 	// Instead of putting our numbers to map with generic hashing, we could use 2 dimensional array,
 	// since we know the digits will be between 48 (0 digit) to 57 (9 digit). By offsetting 48 this would mean
 	// a single array of 10*10=100 elements. Since we know how we will do lookup, we can make this array flat further, by
 	// multiplying offset for second digit search by 10.
 	numbersScore := make(lookupArr_V2, 100)
+	numbers := make([]string, 0, 100)
 	for i := 0; i < firstRowLen; {
-		fmt.Println(string(input[i]))
-		if input[i+1] != ',' {
-			numbersScore.set(input[i], input[i+1], i)
+		if input[i+1] != ',' && input[i+1] != '\n' {
+			numbersScore.set(input[i], input[i+1], len(numbers))
+			numbers = append(numbers, string(input[i])+string(input[i+1]))
 			i += 3
 			continue
 		}
-		numbersScore.set(0, input[i], i)
+		numbersScore.set(0, input[i], len(numbers))
+		numbers = append(numbers, string(input[i]))
 		i += 2
 	}
 
@@ -547,7 +545,7 @@ func BingoPart2_V4(input string) (_ int, err error) {
 		}
 	}
 
-	lastNum, err := strconv.ParseInt(strings.TrimSpace(numbersStr[lastWinningBoardScore]), 10, 64)
+	lastNum, err := strconv.ParseInt(numbers[lastWinningBoardScore], 10, 64)
 	if err != nil {
 		return 0, err
 	}
