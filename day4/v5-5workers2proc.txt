@@ -1,0 +1,16 @@
+goos: linux
+goarch: amd64
+pkg: github.com/bwplotka/efficiency-advent-2021/day4
+cpu: Intel(R) Core(TM) i7-9850H CPU @ 2.60GHz
+BenchmarkBingoPart2-12    	   62655	     18933 ns/op	    5000 B/op	      15 allocs/op
+testing: BenchmarkBingoPart2-12 left GOMAXPROCS set to 2
+BenchmarkBingoPart2-12    	   64941	     18718 ns/op	    5000 B/op	      15 allocs/op
+testing: BenchmarkBingoPart2-12 left GOMAXPROCS set to 2
+BenchmarkBingoPart2-12    	   65372	     19089 ns/op	    5000 B/op	      15 allocs/op
+testing: BenchmarkBingoPart2-12 left GOMAXPROCS set to 2
+BenchmarkBingoPart2-12    	   65247	     18607 ns/op	    5000 B/op	      15 allocs/op
+testing: BenchmarkBingoPart2-12 left GOMAXPROCS set to 2
+BenchmarkBingoPart2-12    	   65685	     18910 ns/op	    5000 B/op	      15 allocs/op
+testing: BenchmarkBingoPart2-12 left GOMAXPROCS set to 2
+PASS
+ok  	github.com/bwplotka/efficiency-advent-2021/day4	7.213s
