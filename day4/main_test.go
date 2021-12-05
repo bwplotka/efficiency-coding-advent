@@ -92,6 +92,21 @@ func TestBignoPart2(t *testing.T) {
 				testutil.Ok(t, err)
 				testutil.Equals(t, tcase.expected, ans)
 			})
+			t.Run("BingoPart2_V2", func(t *testing.T) {
+				ans, err := BingoPart2_V2(input)
+				testutil.Ok(t, err)
+				testutil.Equals(t, tcase.expected, ans)
+			})
+			t.Run("BingoPart2_V3", func(t *testing.T) {
+				ans, err := BingoPart2_V3(input)
+				testutil.Ok(t, err)
+				testutil.Equals(t, tcase.expected, ans)
+			})
+			t.Run("BingoPart2_V4", func(t *testing.T) {
+				ans, err := BingoPart2_V4(input)
+				testutil.Ok(t, err)
+				testutil.Equals(t, tcase.expected, ans)
+			})
 		})
 	}
 }
@@ -105,6 +120,6 @@ func BenchmarkBingoPart2(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Answer, _ = BingoPart2(input)
+		Answer, _ = BingoPart2_V4(input)
 	}
 }

@@ -1,6 +1,7 @@
 package day4
 
 import (
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -192,17 +193,364 @@ func BingoPart2(input string) (_ int, err error) {
 	return int(lastNum) * unmarked, nil
 }
 
-//// ParseInt is a borrowed and modified version from https://felixge.de/2021/12/01/advent-of-go-profiling-2021-day-1-1/
-//func ParseInt(val string) (intval int, _ error) {
-//	factor := 1
-//	for i := len(val) - 1; i >= 0; i-- {
-//		c := val[i]
-//
-//		if c < '0' || c > '9' {
-//			return 0, errors.Errorf("bad int: %q", val)
-//		}
-//		intval += int(c-'0') * factor
-//		factor *= 10
-//	}
-//	return 0, nil
-//}
+// BingoPart2_V2 optimized version of BingoPart2. Main offendant was map access.
+// Before optimizing map I did loop fusion, with obviously no effect, since map was main problem (:
+// So v2 is almost no faster than v1.
+func BingoPart2_V2(input string) (_ int, err error) {
+	firstRowLen := strings.IndexByte(input, '\n')
+	numbersStr := strings.Split(input[:firstRowLen], ",")
+
+	// Prepare single digits, so they are easier to match.
+	// Put all to map, too, so it's easier to search.
+	numbersScore := make(map[string]int, len(numbersStr))
+	for i := range numbersStr {
+		if len(numbersStr[i]) == 1 {
+			numbersStr[i] = " " + numbersStr[i]
+		}
+		numbersScore[numbersStr[i]] = i
+	}
+
+	// Index of first char of board.
+	var boards []int
+	for i := firstRowLen + 2; i < len(input); i += boardSize*3*boardSize + 1 {
+		boards = append(boards, i)
+	}
+
+	lastWinningBoard := -1
+	lastWinningBoardScore := -1
+	for _, b := range boards {
+		boardScore := math.MaxInt
+		// Rows and columns.
+		for i := 0; i < boardSize; i++ {
+			rowScore := -1
+			colScore := -1
+			for j := 0; j < boardSize; j++ {
+				// Rows.
+				if rowScore > -2 {
+					off := b + i*boardSize*3 + j*3
+					order, ok := numbersScore[input[off:off+2]]
+					if !ok {
+						rowScore = -2
+					} else if order > rowScore {
+						rowScore = order
+					}
+				}
+
+				// Column.
+				if colScore > -2 {
+					off := b + j*boardSize*3 + i*3
+					order, ok := numbersScore[input[off:off+2]]
+					if !ok {
+						colScore = -2
+					} else if order > colScore {
+						colScore = order
+					}
+				}
+
+				if rowScore+colScore == -4 {
+					break
+				}
+			}
+
+			if rowScore > -1 && rowScore < boardScore {
+				boardScore = rowScore
+			}
+			if colScore > -1 && colScore < boardScore {
+				boardScore = colScore
+			}
+		}
+
+		if boardScore > -1 && boardScore > lastWinningBoardScore {
+			lastWinningBoard = b
+			lastWinningBoardScore = boardScore
+		}
+	}
+
+	// Calc unmarked numbers.
+	var unmarked int
+	for i := lastWinningBoard; i < lastWinningBoard+boardSize*3*boardSize; i += boardSize * 3 {
+		for j := i; j < i+boardSize*3; j += 3 {
+			val := input[j : j+2]
+			if score, ok := numbersScore[val]; ok && score <= lastWinningBoardScore {
+				continue
+			}
+
+			v, err := strconv.ParseInt(strings.TrimSpace(val), 10, 64)
+			if err != nil {
+				return 0, err
+			}
+			unmarked += int(v)
+		}
+	}
+
+	lastNum, err := strconv.ParseInt(strings.TrimSpace(numbersStr[lastWinningBoardScore]), 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(lastNum) * unmarked, nil
+}
+
+const numberOffset = uint8(48)
+
+type lookupArr_V1 []int
+
+func (a *lookupArr_V1) set(number string, order int) {
+	if order == 0 {
+		order = -1 // This trick allow us to treat 0 as not-found.
+	}
+	if len(number) == 1 {
+		(*a)[number[0]-numberOffset] = order
+		return
+	}
+
+	(*a)[(number[0]-numberOffset)*10+number[1]-numberOffset] = order
+}
+func (a *lookupArr_V1) lookup(number string) (int, bool) {
+	var val int
+	if number[0] == ' ' {
+		val = (*a)[number[1]-numberOffset]
+	} else {
+		val = (*a)[(number[0]-numberOffset)*10+number[1]-numberOffset]
+	}
+
+	if val == 0 {
+		return 0, false
+	}
+	if val == -1 {
+		return 0, true
+	}
+	return val, true
+}
+
+// BingoPart2_V3 optimized version of BingoPart2_V2. Main offendant was still map access, so we switched
+// from map to array and gained 80% latency improvement and 50% space.
+func BingoPart2_V3(input string) (_ int, err error) {
+	firstRowLen := strings.IndexByte(input, '\n')
+	numbersStr := strings.Split(input[:firstRowLen], ",")
+
+	// Prepare single digits, so they are easier to match.
+
+	// Instead of putting our numbers to map with generic hashing, we could use 2 dimensional array,
+	// since we know the digits will be between 48 (0 digit) to 57 (9 digit). By offsetting 48 this would mean
+	// a single array of 10*10=100 elements. Since we know how we will do lookup, we can make this array flat further, by
+	// multiplying offset for second digit search by 10.
+	numbersScore := make(lookupArr_V1, 100)
+	for i := range numbersStr {
+		numbersScore.set(numbersStr[i], i)
+	}
+
+	// Index of first char of board.
+	var boards []int
+	for i := firstRowLen + 2; i < len(input); i += boardSize*3*boardSize + 1 {
+		boards = append(boards, i)
+	}
+
+	lastWinningBoard := -1
+	lastWinningBoardScore := -1
+	for _, b := range boards {
+		boardScore := math.MaxInt
+		// Rows and columns.
+		for i := 0; i < boardSize; i++ {
+			rowScore := -1
+			colScore := -1
+			for j := 0; j < boardSize; j++ {
+				// Rows.
+				if rowScore > -2 {
+					off := b + i*boardSize*3 + j*3
+					order, ok := numbersScore.lookup(input[off : off+2])
+					if !ok {
+						rowScore = -2
+					} else if order > rowScore {
+						rowScore = order
+					}
+				}
+
+				// Column.
+				if colScore > -2 {
+					off := b + j*boardSize*3 + i*3
+					order, ok := numbersScore.lookup(input[off : off+2])
+					if !ok {
+						colScore = -2
+					} else if order > colScore {
+						colScore = order
+					}
+				}
+
+				if rowScore+colScore == -4 {
+					break
+				}
+			}
+
+			if rowScore > -1 && rowScore < boardScore {
+				boardScore = rowScore
+			}
+			if colScore > -1 && colScore < boardScore {
+				boardScore = colScore
+			}
+		}
+
+		if boardScore > -1 && boardScore > lastWinningBoardScore {
+			lastWinningBoard = b
+			lastWinningBoardScore = boardScore
+		}
+	}
+
+	// Calc unmarked numbers.
+	var unmarked int
+	for i := lastWinningBoard; i < lastWinningBoard+boardSize*3*boardSize; i += boardSize * 3 {
+		for j := i; j < i+boardSize*3; j += 3 {
+			val := input[j : j+2]
+			if score, ok := numbersScore.lookup(val); ok && score <= lastWinningBoardScore {
+				continue
+			}
+
+			v, err := strconv.ParseInt(strings.TrimSpace(val), 10, 64)
+			if err != nil {
+				return 0, err
+			}
+			unmarked += int(v)
+		}
+	}
+
+	lastNum, err := strconv.ParseInt(strings.TrimSpace(numbersStr[lastWinningBoardScore]), 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(lastNum) * unmarked, nil
+}
+
+type lookupArr_V2 []int
+
+func (a *lookupArr_V2) set(digit0, digit1 uint8, order int) {
+	if order == 0 {
+		order = -1 // This trick allow us to treat 0 as not-found.
+	}
+	if digit0 == 0 {
+		(*a)[digit1-numberOffset] = order
+		return
+	}
+	fmt.Println(string(digit0), string(digit1))
+	(*a)[(digit0-numberOffset)*10+digit1-numberOffset] = order
+}
+func (a *lookupArr_V2) lookup(number string) (int, bool) {
+	var val int
+	if number[0] == ' ' {
+		val = (*a)[number[1]-numberOffset]
+	} else {
+		val = (*a)[(number[0]-numberOffset)*10+number[1]-numberOffset]
+	}
+
+	if val == 0 {
+		return 0, false
+	}
+	if val == -1 {
+		return 0, true
+	}
+	return val, true
+}
+
+// BingoPart2_V4 optimized version of BingoPart2_V3. Main offendant are the number of offset calc a bit of split.
+func BingoPart2_V4(input string) (_ int, err error) {
+	firstRowLen := strings.IndexByte(input, '\n')
+	numbersStr := strings.Split(input[:firstRowLen], ",")
+
+	// Prepare single digits, so they are easier to match.
+
+	// Instead of putting our numbers to map with generic hashing, we could use 2 dimensional array,
+	// since we know the digits will be between 48 (0 digit) to 57 (9 digit). By offsetting 48 this would mean
+	// a single array of 10*10=100 elements. Since we know how we will do lookup, we can make this array flat further, by
+	// multiplying offset for second digit search by 10.
+	numbersScore := make(lookupArr_V2, 100)
+	for i := 0; i < firstRowLen; {
+		fmt.Println(string(input[i]))
+		if input[i+1] != ',' {
+			numbersScore.set(input[i], input[i+1], i)
+			i += 3
+			continue
+		}
+		numbersScore.set(0, input[i], i)
+		i += 2
+	}
+
+	// Index of first char of board.
+	var boards []int
+	for i := firstRowLen + 2; i < len(input); i += boardSize*3*boardSize + 1 {
+		boards = append(boards, i)
+	}
+
+	lastWinningBoard := -1
+	lastWinningBoardScore := -1
+	for _, b := range boards {
+		boardScore := math.MaxInt
+		// Rows and columns.
+		for i := 0; i < boardSize; i++ {
+			rowScore := -1
+			colScore := -1
+			for j := 0; j < boardSize; j++ {
+				// Rows.
+				if rowScore > -2 {
+					off := b + i*boardSize*3 + j*3
+					order, ok := numbersScore.lookup(input[off : off+2])
+					if !ok {
+						rowScore = -2
+					} else if order > rowScore {
+						rowScore = order
+					}
+				}
+
+				// Column.
+				if colScore > -2 {
+					off := b + j*boardSize*3 + i*3
+					order, ok := numbersScore.lookup(input[off : off+2])
+					if !ok {
+						colScore = -2
+					} else if order > colScore {
+						colScore = order
+					}
+				}
+
+				if rowScore+colScore == -4 {
+					break
+				}
+			}
+
+			if rowScore > -1 && rowScore < boardScore {
+				boardScore = rowScore
+			}
+			if colScore > -1 && colScore < boardScore {
+				boardScore = colScore
+			}
+		}
+
+		if boardScore > -1 && boardScore > lastWinningBoardScore {
+			lastWinningBoard = b
+			lastWinningBoardScore = boardScore
+		}
+	}
+
+	// Calc unmarked numbers.
+	var unmarked int
+	for i := lastWinningBoard; i < lastWinningBoard+boardSize*3*boardSize; i += boardSize * 3 {
+		for j := i; j < i+boardSize*3; j += 3 {
+			val := input[j : j+2]
+			if score, ok := numbersScore.lookup(val); ok && score <= lastWinningBoardScore {
+				continue
+			}
+
+			v, err := strconv.ParseInt(strings.TrimSpace(val), 10, 64)
+			if err != nil {
+				return 0, err
+			}
+			unmarked += int(v)
+		}
+	}
+
+	lastNum, err := strconv.ParseInt(strings.TrimSpace(numbersStr[lastWinningBoardScore]), 10, 64)
+	if err != nil {
+		return 0, err
+	}
+
+	return int(lastNum) * unmarked, nil
+}
