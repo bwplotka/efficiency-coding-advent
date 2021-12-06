@@ -48,12 +48,18 @@ func newSegment(x1, y1, x2, y2 int64) segment {
 	return s
 }
 
-func overlappedRange(a1, a2, b1, b2 int64) (s, e int64, noOverlap bool) {
-	if a2 < b1 || b2 > a1 {
-		return 0, 0, true
+func overlappedRange(a1, a2, b1, b2 int64) (s, e int64, overlap bool) {
+	if a1 > a2 {
+		a1, a2 = a2, a1
 	}
-	fmt.
-		s = a1
+	if b1 > b2 {
+		b1, b2 = b2, b1
+	}
+
+	if a2 > b1 || b2 > a1 {
+		return 0, 0, false
+	}
+	s = a1
 	if s < b1 {
 		s = b1
 	}
@@ -63,26 +69,40 @@ func overlappedRange(a1, a2, b1, b2 int64) (s, e int64, noOverlap bool) {
 		e = b2
 	}
 
-	fmt.Println(s, e)
-	return s, e, false
+	return s, e, true
 
 }
 
 func (l *segment) intersectionPoints(other *segment) []point {
+	sx, ex, isOverlap := overlappedRange(l.x1, l.x2, other.x1, other.x2)
+	if !isOverlap {
+		return nil
+	}
+
+	if _, _, isOverlap := overlappedRange(l.y1, l.y2, other.y1, other.y2); !isOverlap {
+		return nil
+	}
+
 	if l.vertX != math.MaxInt {
 		if other.vertX != math.MaxInt {
 			if l.vertX != other.vertX {
 				return nil
 			}
 
-			if other.x2 < l.vertX || l.vertX > other.x1 {
+			if _, _, isOverlap := overlappedRange(l.x1, l.x2, other.x1, other.x2); !isOverlap {
+				return nil
+			}
+			if _, _, isOverlap := overlappedRange(l.y1, l.y2, other.y1, other.y2); !isOverlap {
 				return nil
 			}
 			return []point{{x: l.vertX, y: int64(other.a*float64(l.vertX) + other.b)}}
 		}
 	}
 	if other.vertX != math.MaxInt {
-		if l.x2 < other.vertX || other.vertX > l.x1 {
+		if _, _, isOverlap := overlappedRange(l.x1, l.x2, other.x1, other.x2); !isOverlap {
+			return nil
+		}
+		if _, _, isOverlap := overlappedRange(l.y1, l.y2, other.y1, other.y2); !isOverlap {
 			return nil
 		}
 		return []point{{x: other.vertX, y: int64(l.a*float64(other.vertX) + l.b)}}
@@ -96,16 +116,15 @@ func (l *segment) intersectionPoints(other *segment) []point {
 		}
 
 		// This assumes x1 is always smaller than x2.
-		sx, ex, noOverlap := overlappedRange(l.x1, l.x2, other.x1, other.x2)
-		if noOverlap {
+		sx, ex, isOverlap := overlappedRange(l.x1, l.x2, other.x1, other.x2)
+		if !isOverlap {
 			return nil
 		}
 
-		if l.y2 < other.y1 || other.y2 > l.y1 {
+		if _, _, isOverlap := overlappedRange(l.y1, l.y2, other.y1, other.y2); !isOverlap {
 			return nil
 		}
 
-		fmt.Println(ex - sx)
 		p := make([]point, 0, ex-sx)
 		for i := sx; i <= sx; i++ {
 			p = append(p, point{
@@ -173,9 +192,10 @@ func VentsOverlapPart1(input string) (_ int, err error) {
 
 		newSeg := newSegment(x1, y1, x2, y2)
 
-		fmt.Println(x1, x2, newSeg.a, newSeg.b)
+		fmt.Println("got", x1, x2, newSeg.a, newSeg.b)
 		for _, seg := range segments {
 			ps := seg.intersectionPoints(&newSeg)
+			fmt.Println("intersections against", seg.x1, seg.x2, ps)
 			for _, p := range ps {
 				overlaps[p]++
 			}
