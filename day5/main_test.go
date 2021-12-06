@@ -28,7 +28,7 @@ func TestVentsOverlapPart1(t *testing.T) {
 		},
 		{
 			input:    day2.ReadTestInput(t),
-			expected: 4662,
+			expected: 1786,
 		},
 	} {
 		t.Run("", func(t *testing.T) {

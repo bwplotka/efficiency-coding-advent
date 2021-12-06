@@ -103,7 +103,7 @@ func (l *segment) intersectionPoints(other *segment) []point {
 		}
 
 		p := make([]point, 0, ex-sx)
-		for i := sx; i <= sx; i++ {
+		for i := sx; i <= ex; i++ {
 			p = append(p, point{
 				x: i,
 				y: int64(l.a*float64(i) + l.b),
@@ -183,7 +183,7 @@ func VentsOverlapPart1(input string) (_ int, err error) {
 
 	var numOverlaps int
 	for _, o := range overlaps {
-		if o > 2 {
+		if o > 0 {
 			numOverlaps++
 		}
 	}
