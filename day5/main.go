@@ -579,6 +579,7 @@ func VentsOverlapPart2_V4(input string) (_ int, err error) {
 		segments = make([]segment_V2, 0, 500) // 500 is "cheating" - I know max input size is 500.
 	)
 
+	calls := 0
 	for i := 0; i < len(input); {
 		j := i
 		for input[i] != ',' {
@@ -630,16 +631,18 @@ func VentsOverlapPart2_V4(input string) (_ int, err error) {
 			newOverlaps++
 		}
 		for _, seg := range segments {
+			calls++
 			seg.markIntersectionPoints(&newSeg, markFn)
 		}
 
 		segments = append(segments, newSeg)
 	}
 
+	fmt.Println(calls)
 	return newOverlaps, nil
 }
 
-const shardBy = 5
+const shardBy = 250
 
 // VentsOverlapPart2_V5 is optimized version of VentsOverlapPart2_V4
 // Main offendant is still intersection functions.
@@ -660,7 +663,6 @@ func VentsOverlapPart2_V5(input string) (_ int, err error) {
 	segments[3] = make([]segment_V2, 0, 300) // 500 is "cheating" - I know max input size is 500.
 
 	markFn := func(x, y int64) {
-		fmt.Println("overlap", x, y)
 		i := x + 1000*y
 		if overlaps[i] {
 			return
@@ -669,6 +671,7 @@ func VentsOverlapPart2_V5(input string) (_ int, err error) {
 		newOverlaps++
 	}
 
+	calls := 0
 	for i := 0; i < len(input); {
 		j := i
 		for input[i] != ',' {
@@ -715,9 +718,7 @@ func VentsOverlapPart2_V5(input string) (_ int, err error) {
 		shard := newSeg.x1 / shardBy
 		shard2 := newSeg.x2 / shardBy
 
-		fmt.Println("sharding", shard, shard2)
 		for k := shard; k <= shard2; k++ {
-			fmt.Println("Main", newSeg.x1, newSeg.y1, "->", newSeg.x2, newSeg.y2, newSeg.a, newSeg.b)
 			seg := newSeg
 			if k < shard2 {
 
@@ -725,6 +726,7 @@ func VentsOverlapPart2_V5(input string) (_ int, err error) {
 				seg = segment_V2{
 					x1: newSeg.x1, y1: newSeg.y1,
 					a: newSeg.a, b: newSeg.b,
+					vertX: math.MaxInt,
 				}
 
 				seg.x2 = (k+1)*shardBy - 1
@@ -732,13 +734,9 @@ func VentsOverlapPart2_V5(input string) (_ int, err error) {
 				newSeg.x1 = seg.x2 + 1
 				newSeg.y1 = int64(newSeg.a*float64(newSeg.x1) + newSeg.b)
 			}
-			fmt.Println(seg.x1, seg.y1, "->", seg.x2, seg.y2, seg.a, seg.b)
 
 			for _, other := range segments[k] {
-				if other.x1 == 0 && other.y1 == 8 {
-					fmt.Println("Ch!!!eck", other.x1, other.y1, "->", other.x2, other.y2, other.a, other.b)
-				}
-
+				calls += 1
 				other.markIntersectionPoints(&seg, markFn)
 			}
 
@@ -746,6 +744,6 @@ func VentsOverlapPart2_V5(input string) (_ int, err error) {
 		}
 	}
 
-	fmt.Println(len(segments[0]), len(segments[1]), len(segments[2]), len(segments[3]))
+	fmt.Println(calls)
 	return newOverlaps, nil
 }
