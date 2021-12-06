@@ -1,0 +1,11 @@
+goos: linux
+goarch: amd64
+pkg: github.com/bwplotka/efficiency-advent-2021/day5
+cpu: Intel(R) Core(TM) i7-9850H CPU @ 2.60GHz
+BenchmarkVentsOverlapPart2-12    	     370	   3396441 ns/op	 1055628 B/op	    1501 allocs/op
+BenchmarkVentsOverlapPart2-12    	     376	   3098529 ns/op	 1055626 B/op	    1501 allocs/op
+BenchmarkVentsOverlapPart2-12    	     363	   3088262 ns/op	 1055654 B/op	    1501 allocs/op
+BenchmarkVentsOverlapPart2-12    	     408	   3082711 ns/op	 1055616 B/op	    1501 allocs/op
+BenchmarkVentsOverlapPart2-12    	     393	   3135813 ns/op	 1055619 B/op	    1501 allocs/op
+PASS
+ok  	github.com/bwplotka/efficiency-advent-2021/day5	7.747s
