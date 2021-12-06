@@ -645,7 +645,7 @@ const shardBy = 250
 
 // VentsOverlapPart2_V5 is optimized version of VentsOverlapPart2_V4
 // Main offendant is still intersection functions.
-// NOTE: Spliting into 4 shards only increases intersection calls 124750 in v4 vs 126092, but we can in theory do them concurrently!
+// NOTE: Spliting into 4 shards only increases intersection calls 124750 in v4 vs 126092, but we can do them concurrently!
 func VentsOverlapPart2_V5(input string) (_ int, err error) {
 	runtime.GOMAXPROCS(4)
 
