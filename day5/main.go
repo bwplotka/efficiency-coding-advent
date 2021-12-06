@@ -56,7 +56,7 @@ func overlappedRange(a1, a2, b1, b2 int64) (s, e int64, overlap bool) {
 		b1, b2 = b2, b1
 	}
 
-	if a2 > b1 || b2 > a1 {
+	if a2 > b1 && b2 > a1 {
 		return 0, 0, false
 	}
 	s = a1
@@ -89,12 +89,6 @@ func (l *segment) intersectionPoints(other *segment) []point {
 				return nil
 			}
 
-			if _, _, isOverlap := overlappedRange(l.x1, l.x2, other.x1, other.x2); !isOverlap {
-				return nil
-			}
-			if _, _, isOverlap := overlappedRange(l.y1, l.y2, other.y1, other.y2); !isOverlap {
-				return nil
-			}
 			return []point{{x: l.vertX, y: int64(other.a*float64(l.vertX) + other.b)}}
 		}
 	}
@@ -112,16 +106,6 @@ func (l *segment) intersectionPoints(other *segment) []point {
 		// Parallel, but is b same?
 		if l.b != other.b {
 			// No intersect point.
-			return nil
-		}
-
-		// This assumes x1 is always smaller than x2.
-		sx, ex, isOverlap := overlappedRange(l.x1, l.x2, other.x1, other.x2)
-		if !isOverlap {
-			return nil
-		}
-
-		if _, _, isOverlap := overlappedRange(l.y1, l.y2, other.y1, other.y2); !isOverlap {
 			return nil
 		}
 
