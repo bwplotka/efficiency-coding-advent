@@ -3,8 +3,10 @@ package day5
 import (
 	"fmt"
 	"math"
+	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type point struct {
@@ -579,7 +581,6 @@ func VentsOverlapPart2_V4(input string) (_ int, err error) {
 		segments = make([]segment_V2, 0, 500) // 500 is "cheating" - I know max input size is 500.
 	)
 
-	calls := 0
 	for i := 0; i < len(input); {
 		j := i
 		for input[i] != ',' {
@@ -631,14 +632,12 @@ func VentsOverlapPart2_V4(input string) (_ int, err error) {
 			newOverlaps++
 		}
 		for _, seg := range segments {
-			calls++
 			seg.markIntersectionPoints(&newSeg, markFn)
 		}
 
 		segments = append(segments, newSeg)
 	}
 
-	fmt.Println(calls)
 	return newOverlaps, nil
 }
 
@@ -646,32 +645,35 @@ const shardBy = 250
 
 // VentsOverlapPart2_V5 is optimized version of VentsOverlapPart2_V4
 // Main offendant is still intersection functions.
+// NOTE: Spliting into 4 shards only increases intersection calls 124750 in v4 vs 126092, but we can in theory do them concurrently!
 func VentsOverlapPart2_V5(input string) (_ int, err error) {
+	runtime.GOMAXPROCS(4)
+
 	var (
 		// Map can be quite large and slow, so idea could be to maintain an array of 1000*1000 elements.
 		// That's 1MB, which we need to live with (: Trade-off to win latency.
-		overlaps    = make([]bool, 1000*1000)
-		newOverlaps int
+		overlaps = make([]bool, 1000*1000)
 
-		segments = make([][]segment_V2, 4)
+		// Let's shard x space per 250 points (4 shards for input) so n*n-1 space is smaller too.
+		// Overlaps don't need to be sharded - since separate positions should be always accessed per shard.
+		newOverlaps = make([]int, 4)
+		markFns     = make([]func(x, y int64), 4)
+		segments    = make([][]segment_V2, 4)
 	)
 
-	// Let's shard x space per 250 points (4 shards for input) so n*n-1 space is smaller too.
-	segments[0] = make([]segment_V2, 0, 300) // 500 is "cheating" - I know max input size is 500.
-	segments[1] = make([]segment_V2, 0, 300) // 500 is "cheating" - I know max input size is 500.
-	segments[2] = make([]segment_V2, 0, 300) // 500 is "cheating" - I know max input size is 500.
-	segments[3] = make([]segment_V2, 0, 300) // 500 is "cheating" - I know max input size is 500.
-
-	markFn := func(x, y int64) {
-		i := x + 1000*y
-		if overlaps[i] {
-			return
+	for k := 0; k < 4; k++ {
+		segments[k] = make([]segment_V2, 0, 300) // 500 is "cheating" - I know max input size is 500.
+		k := k
+		markFns[k] = func(x, y int64) {
+			i := x + 1000*y
+			if overlaps[i] {
+				return
+			}
+			overlaps[i] = true
+			newOverlaps[k]++
 		}
-		overlaps[i] = true
-		newOverlaps++
 	}
 
-	calls := 0
 	for i := 0; i < len(input); {
 		j := i
 		for input[i] != ',' {
@@ -735,15 +737,25 @@ func VentsOverlapPart2_V5(input string) (_ int, err error) {
 				newSeg.y1 = int64(newSeg.a*float64(newSeg.x1) + newSeg.b)
 			}
 
-			for _, other := range segments[k] {
-				calls += 1
-				other.markIntersectionPoints(&seg, markFn)
-			}
-
 			segments[k] = append(segments[k], seg)
 		}
 	}
 
-	fmt.Println(calls)
-	return newOverlaps, nil
+	wg := sync.WaitGroup{}
+	for s, parts := range segments {
+		wg.Add(1)
+		parts := parts
+		s := s
+		go func() {
+			defer wg.Done()
+			for i, p := range parts {
+				for _, other := range parts[i+1:] {
+					other.markIntersectionPoints(&p, markFns[s])
+				}
+			}
+		}()
+	}
+	wg.Wait()
+
+	return newOverlaps[0] + newOverlaps[1] + newOverlaps[2] + newOverlaps[3], nil
 }
