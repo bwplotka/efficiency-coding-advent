@@ -65,7 +65,7 @@ func TestVentsOverlapPart2(t *testing.T) {
 		},
 		{
 			input:    day2.ReadTestInput(t),
-			expected: 18674, // Not 19720
+			expected: 18674,
 		},
 	} {
 		t.Run("", func(t *testing.T) {
@@ -91,6 +91,11 @@ func TestVentsOverlapPart2(t *testing.T) {
 				testutil.Ok(t, err)
 				testutil.Equals(t, tcase.expected, ans)
 			})
+			t.Run("VentsOverlapPart2_V5", func(t *testing.T) {
+				ans, err := VentsOverlapPart2_V5(input)
+				testutil.Ok(t, err)
+				testutil.Equals(t, tcase.expected, ans)
+			})
 		})
 	}
 }
@@ -104,7 +109,7 @@ func BenchmarkVentsOverlapPart2(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Answer, _ = VentsOverlapPart2_V4(input)
+		Answer, _ = VentsOverlapPart2_V5(input)
 	}
 }
 

@@ -627,7 +627,6 @@ func VentsOverlapPart2_V4(input string) (_ int, err error) {
 				return
 			}
 			overlaps[i] = true
-
 			newOverlaps++
 		}
 		for _, seg := range segments {
@@ -637,5 +636,112 @@ func VentsOverlapPart2_V4(input string) (_ int, err error) {
 		segments = append(segments, newSeg)
 	}
 
+	return newOverlaps, nil
+}
+
+const shardBy = 5
+
+// VentsOverlapPart2_V5 is optimized version of VentsOverlapPart2_V4
+// Main offendant is still intersection functions.
+func VentsOverlapPart2_V5(input string) (_ int, err error) {
+	var (
+		// Map can be quite large and slow, so idea could be to maintain an array of 1000*1000 elements.
+		// That's 1MB, which we need to live with (: Trade-off to win latency.
+		overlaps    = make([]bool, 1000*1000)
+		newOverlaps int
+
+		segments = make([][]segment_V2, 4)
+	)
+
+	// Let's shard x space per 250 points (4 shards for input) so n*n-1 space is smaller too.
+	segments[0] = make([]segment_V2, 0, 300) // 500 is "cheating" - I know max input size is 500.
+	segments[1] = make([]segment_V2, 0, 300) // 500 is "cheating" - I know max input size is 500.
+	segments[2] = make([]segment_V2, 0, 300) // 500 is "cheating" - I know max input size is 500.
+	segments[3] = make([]segment_V2, 0, 300) // 500 is "cheating" - I know max input size is 500.
+
+	markFn := func(x, y int64) {
+		fmt.Println("overlap", x, y)
+		i := x + 1000*y
+		if overlaps[i] {
+			return
+		}
+		overlaps[i] = true
+		newOverlaps++
+	}
+
+	for i := 0; i < len(input); {
+		j := i
+		for input[i] != ',' {
+			i++
+		}
+		x1, err := strconv.ParseInt(input[j:i], 10, 64)
+		if err != nil {
+			return 0, err
+		}
+
+		i++
+		j = i
+		for input[i] != ' ' {
+			i++
+		}
+		y1, err := strconv.ParseInt(input[j:i], 10, 64)
+		if err != nil {
+			return 0, err
+		}
+
+		i += 4
+		j = i
+		for input[i] != ',' {
+			i++
+		}
+		x2, err := strconv.ParseInt(input[j:i], 10, 64)
+		if err != nil {
+			return 0, err
+		}
+
+		i++
+		j = i
+		for input[i] != '\n' {
+			i++
+		}
+		y2, err := strconv.ParseInt(input[j:i], 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		i++
+
+		newSeg := newSegment_V2(x1, y1, x2, y2)
+
+		shard := newSeg.x1 / shardBy
+		shard2 := newSeg.x2 / shardBy
+
+		fmt.Println("sharding", shard, shard2)
+		for k := shard; k <= shard2; k++ {
+			fmt.Println("OTHER", newSeg.x1, newSeg.y1, "->", newSeg.x2, newSeg.y2, newSeg.a, newSeg.b)
+			seg := newSeg
+			if k < shard2 {
+
+				// Note, vertical line impossible, so we can exclude.
+				seg = segment_V2{
+					x1: newSeg.x1, y1: newSeg.y1,
+					a: newSeg.a, b: newSeg.b,
+				}
+
+				seg.x2 = (k + 1) * shardBy
+				seg.y2 = int64(newSeg.a*float64(seg.x2) + newSeg.b)
+				newSeg.x1 = seg.x2 + 1
+				newSeg.y1 = int64(newSeg.a*float64(newSeg.x1) + newSeg.b)
+			}
+			fmt.Println(seg.x1, seg.y1, "->", seg.x2, seg.y2)
+
+			for _, other := range segments[k] {
+				other.markIntersectionPoints(&seg, markFn)
+			}
+
+			segments[k] = append(segments[k], seg)
+		}
+	}
+
+	fmt.Println(len(segments[0]), len(segments[1]), len(segments[2]), len(segments[3]))
 	return newOverlaps, nil
 }
