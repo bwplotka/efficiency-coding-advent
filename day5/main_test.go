@@ -65,7 +65,7 @@ func TestVentsOverlapPart2(t *testing.T) {
 		},
 		{
 			input:    day2.ReadTestInput(t),
-			expected: 2, // Not 19720
+			expected: 18674, // Not 19720
 		},
 	} {
 		t.Run("", func(t *testing.T) {
@@ -90,5 +90,46 @@ func BenchmarkVentsOverlapPart2(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		Answer, _ = VentsOverlapPart2(input)
+	}
+}
+
+func TestIntersection(t *testing.T) {
+	for _, tcase := range []struct {
+		a, b     segment
+		expected []point
+	}{
+		// Horizontal.
+		{
+			a:        newSegment(30, 50, 70, 50),
+			b:        newSegment(30, 50, 31, 50),
+			expected: []point{{30, 50}, {31, 50}},
+		},
+		{
+			a:        newSegment(70, 50, 30, 50),
+			b:        newSegment(30, 50, 31, 50),
+			expected: []point{{30, 50}, {31, 50}},
+		},
+		{
+			a: newSegment(70, 50, 30, 50),
+			b: newSegment(20, 50, 29, 50),
+		},
+		{
+			a:        newSegment(70, 50, 30, 50),
+			b:        newSegment(20, 50, 30, 50),
+			expected: []point{{30, 50}},
+		},
+		{
+			a:        newSegment(70, 50, 30, 50),
+			b:        newSegment(70, 50, 730, 50),
+			expected: []point{{70, 50}},
+		},
+		{
+			a: newSegment(70, 50, 30, 50),
+			b: newSegment(71, 50, 730, 50),
+		},
+	} {
+		t.Run("", func(t *testing.T) {
+			testutil.Equals(t, tcase.expected, tcase.a.intersectionPoints(&tcase.b))
+		})
 	}
 }

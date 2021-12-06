@@ -72,7 +72,7 @@ func overlappedRange(a1, a2, b1, b2 int64) (s, e int64, potentialOverlap bool) {
 	return s, e, true
 }
 
-func (l *segment) intersectionPoints(other *segment) []point {
+func (l *segment) intersectionPoints(other *segment) (ret []point) {
 	// Rough check of boundaries within "square".
 	sx, ex, isOverlap := overlappedRange(l.x1, l.x2, other.x1, other.x2)
 	if !isOverlap {
@@ -82,6 +82,17 @@ func (l *segment) intersectionPoints(other *segment) []point {
 	if !isOverlap {
 		return nil
 	}
+
+	defer func() {
+		for _, p := range ret {
+			if p.x < sx || p.x > ex {
+				panic("found point outside of x")
+			}
+			if p.y < sy || p.y > ey {
+				panic("found point outside of y")
+			}
+		}
+	}()
 
 	if l.vertX != math.MaxInt {
 		if other.vertX != math.MaxInt {
@@ -125,6 +136,7 @@ func (l *segment) intersectionPoints(other *segment) []point {
 		for i := sx; i <= ex; i++ {
 			y := int64(l.a*float64(i) + l.b)
 			if y < sy || y > ey {
+				fmt.Println("outside!!")
 				continue
 			}
 
@@ -138,7 +150,12 @@ func (l *segment) intersectionPoints(other *segment) []point {
 	// so:
 	// a1 * x + b1 = a2 * x + b2 -> x * (a1 - a2) = b2 - b1 -> x = (b2 - b1) / (a1 - a2)
 	var p point
-	p.x = int64((other.b - l.b) / (l.a - other.a))
+	xFloat := (other.b - l.b) / (l.a - other.a)
+	if xFloat != math.Trunc(xFloat) {
+		// Our space is discrete.
+		return nil
+	}
+	p.x = int64(xFloat)
 	p.y = int64(l.a*float64(p.x) + l.b)
 
 	if p.x < sx || p.x > ex {
@@ -262,7 +279,7 @@ func VentsOverlapPart2(input string) (_ int, err error) {
 		newSeg := newSegment(x1, y1, x2, y2)
 
 		// Useful debug log (:
-		//fmt.Println("got", newSeg.x1, newSeg.y1, "->", newSeg.x2, newSeg.y2, newSeg.a, newSeg.b, newSeg.vertX)
+		// fmt.Println("got", newSeg.x1, newSeg.y1, "->", newSeg.x2, newSeg.y2, newSeg.a, newSeg.b, newSeg.vertX)
 		for _, seg := range segments {
 			ps := seg.intersectionPoints(&newSeg)
 			// Useful debug log.
