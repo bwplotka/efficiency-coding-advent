@@ -1,6 +1,7 @@
 package day5
 
 import (
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -47,7 +48,7 @@ func newSegment(x1, y1, x2, y2 int64) segment {
 	return s
 }
 
-func overlappedRange(a1, a2, b1, b2 int64) (s, e int64, overlap bool) {
+func overlappedRange(a1, a2, b1, b2 int64) (s, e int64, potentialOverlap bool) {
 	if a1 > a2 {
 		a1, a2 = a2, a1
 	}
@@ -69,16 +70,16 @@ func overlappedRange(a1, a2, b1, b2 int64) (s, e int64, overlap bool) {
 	}
 
 	return s, e, true
-
 }
 
 func (l *segment) intersectionPoints(other *segment) []point {
+	// Rough check of boundaries within "square".
 	sx, ex, isOverlap := overlappedRange(l.x1, l.x2, other.x1, other.x2)
 	if !isOverlap {
 		return nil
 	}
-
-	if _, _, isOverlap := overlappedRange(l.y1, l.y2, other.y1, other.y2); !isOverlap {
+	sy, ey, isOverlap := overlappedRange(l.y1, l.y2, other.y1, other.y2)
+	if !isOverlap {
 		return nil
 	}
 
@@ -88,11 +89,29 @@ func (l *segment) intersectionPoints(other *segment) []point {
 				return nil
 			}
 
-			return []point{{x: l.vertX, y: int64(other.a*float64(l.vertX) + other.b)}}
+			// Parallel, and same x.
+			p := make([]point, 0, ey-sy)
+			for i := sy; i <= ey; i++ {
+				p = append(p, point{
+					x: l.vertX,
+					y: i,
+				})
+			}
+			return p
 		}
+		y := int64(other.a*float64(l.vertX) + other.b)
+		if y < sy || y > ey {
+			return nil
+		}
+		return []point{{x: l.vertX, y: y}}
 	}
+
 	if other.vertX != math.MaxInt {
-		return []point{{x: other.vertX, y: int64(l.a*float64(other.vertX) + l.b)}}
+		y := int64(l.a*float64(other.vertX) + l.b)
+		if y < sy || y > ey {
+			return nil
+		}
+		return []point{{x: other.vertX, y: y}}
 	}
 
 	if l.a == other.a {
@@ -104,10 +123,12 @@ func (l *segment) intersectionPoints(other *segment) []point {
 
 		p := make([]point, 0, ex-sx)
 		for i := sx; i <= ex; i++ {
-			p = append(p, point{
-				x: i,
-				y: int64(l.a*float64(i) + l.b),
-			})
+			y := int64(l.a*float64(i) + l.b)
+			if y < sy || y > ey {
+				continue
+			}
+
+			p = append(p, point{x: i, y: y})
 		}
 		return p
 	}
@@ -120,6 +141,12 @@ func (l *segment) intersectionPoints(other *segment) []point {
 	p.x = int64((other.b - l.b) / (l.a - other.a))
 	p.y = int64(l.a*float64(p.x) + l.b)
 
+	if p.x < sx || p.x > ex {
+		return nil
+	}
+	if p.y < sy || p.y > ey {
+		return nil
+	}
 	return []point{p}
 
 }
@@ -169,10 +196,80 @@ func VentsOverlapPart1(input string) (_ int, err error) {
 
 		newSeg := newSegment(x1, y1, x2, y2)
 
-		//fmt.Println("got", x1, y1, "->", x2, y2, newSeg.a, newSeg.b)
+		fmt.Println("got", newSeg.x1, newSeg.y1, "->", newSeg.x2, newSeg.y2, newSeg.a, newSeg.b, newSeg.vertX)
 		for _, seg := range segments {
 			ps := seg.intersectionPoints(&newSeg)
-			//fmt.Println("intersections against", seg.x1, seg.y1, "->", seg.x2, seg.y2, ps)
+			if len(ps) > 0 {
+				fmt.Println("intersections against", seg.x1, seg.y1, "->", seg.x2, seg.y2, ps)
+			}
+
+			for _, p := range ps {
+				overlaps[p]++
+			}
+		}
+
+		segments = append(segments, newSeg)
+	}
+
+	var numOverlaps int
+	for _, o := range overlaps {
+		if o > 0 {
+			numOverlaps++
+		}
+	}
+
+	return numOverlaps, nil
+}
+
+func VentsOverlapPart2(input string) (_ int, err error) {
+	var (
+		// TODO(bwplotka): Map can be quite large and slow, so idea could be to maintain sorted array
+		// of overlaps by its distance from 0,0.
+		overlaps = map[point]int{}
+		segments = make([]segment, 0, 500) // 500 is "cheating" - I know max input size is 500.
+		line     string
+	)
+	for len(input) > 0 {
+		i := strings.IndexByte(input, '\n')
+		if i == -1 {
+			break
+		}
+		line = input[0:i]
+		input = input[i+1:]
+
+		s := strings.Split(line, " -> ")
+		start := strings.Split(s[0], ",")
+		end := strings.Split(s[1], ",")
+
+		x1, err := strconv.ParseInt(start[0], 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		y1, err := strconv.ParseInt(start[1], 10, 64)
+		if err != nil {
+			return 0, err
+		}
+
+		x2, err := strconv.ParseInt(end[0], 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		y2, err := strconv.ParseInt(end[1], 10, 64)
+		if err != nil {
+			return 0, err
+		}
+
+		newSeg := newSegment(x1, y1, x2, y2)
+
+		// Useful debug log (:
+		//fmt.Println("got", newSeg.x1, newSeg.y1, "->", newSeg.x2, newSeg.y2, newSeg.a, newSeg.b, newSeg.vertX)
+		for _, seg := range segments {
+			ps := seg.intersectionPoints(&newSeg)
+			// Useful debug log.
+			//if len(ps) > 0 {
+			//	fmt.Println("intersections against", seg.x1, seg.y1, "->", seg.x2, seg.y2, ps)
+			//}
+
 			for _, p := range ps {
 				overlaps[p]++
 			}
