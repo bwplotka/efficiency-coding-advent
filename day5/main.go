@@ -1,7 +1,6 @@
 package day5
 
 import (
-	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -56,7 +55,7 @@ func overlappedRange(a1, a2, b1, b2 int64) (s, e int64, overlap bool) {
 		b1, b2 = b2, b1
 	}
 
-	if a2 > b1 && b2 > a1 {
+	if a2 < b1 || b2 < a1 {
 		return 0, 0, false
 	}
 	s = a1
@@ -93,12 +92,6 @@ func (l *segment) intersectionPoints(other *segment) []point {
 		}
 	}
 	if other.vertX != math.MaxInt {
-		if _, _, isOverlap := overlappedRange(l.x1, l.x2, other.x1, other.x2); !isOverlap {
-			return nil
-		}
-		if _, _, isOverlap := overlappedRange(l.y1, l.y2, other.y1, other.y2); !isOverlap {
-			return nil
-		}
 		return []point{{x: other.vertX, y: int64(l.a*float64(other.vertX) + l.b)}}
 	}
 
@@ -176,10 +169,10 @@ func VentsOverlapPart1(input string) (_ int, err error) {
 
 		newSeg := newSegment(x1, y1, x2, y2)
 
-		fmt.Println("got", x1, x2, newSeg.a, newSeg.b)
+		//fmt.Println("got", x1, y1, "->", x2, y2, newSeg.a, newSeg.b)
 		for _, seg := range segments {
 			ps := seg.intersectionPoints(&newSeg)
-			fmt.Println("intersections against", seg.x1, seg.x2, ps)
+			//fmt.Println("intersections against", seg.x1, seg.y1, "->", seg.x2, seg.y2, ps)
 			for _, p := range ps {
 				overlaps[p]++
 			}
