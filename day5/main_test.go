@@ -59,7 +59,7 @@ func TestVentsOverlapPart2(t *testing.T) {
 0,9 -> 2,9
 3,4 -> 1,4
 0,0 -> 8,8
-5,5 -> 8,2,
+5,5 -> 8,2
 2,2 -> 2,0`, // Extra test case over simple case in advent to check vertical line overlaps.
 			expected: 12 + 2,
 		},

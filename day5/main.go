@@ -577,40 +577,50 @@ func VentsOverlapPart2_V4(input string) (_ int, err error) {
 		newOverlaps int
 
 		segments = make([]segment_V2, 0, 500) // 500 is "cheating" - I know max input size is 500.
-		line     string
 	)
-	for len(input) > 0 {
-		i := strings.IndexByte(input, '\n')
-		if i == -1 {
-			break
-		}
-		line = input[0:i]
-		input = input[i+1:]
 
-		s := strings.Split(line, " -> ")
-		start := strings.Split(s[0], ",")
-		end := strings.Split(s[1], ",")
-
-		x1, err := strconv.ParseInt(start[0], 10, 64)
-		if err != nil {
-			return 0, err
+	for i := 0; i < len(input); {
+		j := i
+		for input[i] != ',' {
+			i++
 		}
-		y1, err := strconv.ParseInt(start[1], 10, 64)
+		x1, err := strconv.ParseInt(input[j:i], 10, 64)
 		if err != nil {
 			return 0, err
 		}
 
-		x2, err := strconv.ParseInt(end[0], 10, 64)
+		i++
+		j = i
+		for input[i] != ' ' {
+			i++
+		}
+		y1, err := strconv.ParseInt(input[j:i], 10, 64)
 		if err != nil {
 			return 0, err
 		}
-		y2, err := strconv.ParseInt(end[1], 10, 64)
+
+		i += 4
+		j = i
+		for input[i] != ',' {
+			i++
+		}
+		x2, err := strconv.ParseInt(input[j:i], 10, 64)
 		if err != nil {
 			return 0, err
 		}
+
+		i++
+		j = i
+		for input[i] != '\n' {
+			i++
+		}
+		y2, err := strconv.ParseInt(input[j:i], 10, 64)
+		if err != nil {
+			return 0, err
+		}
+		i++
 
 		newSeg := newSegment_V2(x1, y1, x2, y2)
-
 		markFn := func(x, y int64) {
 			i := x + 1000*y
 			if overlaps[i] {
