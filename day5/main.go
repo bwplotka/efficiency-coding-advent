@@ -717,7 +717,7 @@ func VentsOverlapPart2_V5(input string) (_ int, err error) {
 
 		fmt.Println("sharding", shard, shard2)
 		for k := shard; k <= shard2; k++ {
-			fmt.Println("OTHER", newSeg.x1, newSeg.y1, "->", newSeg.x2, newSeg.y2, newSeg.a, newSeg.b)
+			fmt.Println("Main", newSeg.x1, newSeg.y1, "->", newSeg.x2, newSeg.y2, newSeg.a, newSeg.b)
 			seg := newSeg
 			if k < shard2 {
 
@@ -727,14 +727,18 @@ func VentsOverlapPart2_V5(input string) (_ int, err error) {
 					a: newSeg.a, b: newSeg.b,
 				}
 
-				seg.x2 = (k + 1) * shardBy
+				seg.x2 = (k+1)*shardBy - 1
 				seg.y2 = int64(newSeg.a*float64(seg.x2) + newSeg.b)
 				newSeg.x1 = seg.x2 + 1
 				newSeg.y1 = int64(newSeg.a*float64(newSeg.x1) + newSeg.b)
 			}
-			fmt.Println(seg.x1, seg.y1, "->", seg.x2, seg.y2)
+			fmt.Println(seg.x1, seg.y1, "->", seg.x2, seg.y2, seg.a, seg.b)
 
 			for _, other := range segments[k] {
+				if other.x1 == 0 && other.y1 == 8 {
+					fmt.Println("Ch!!!eck", other.x1, other.y1, "->", other.x2, other.y2, other.a, other.b)
+				}
+
 				other.markIntersectionPoints(&seg, markFn)
 			}
 
