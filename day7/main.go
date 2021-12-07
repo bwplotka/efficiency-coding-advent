@@ -1,7 +1,6 @@
 package day7
 
 import (
-	"fmt"
 	"math"
 	"sort"
 	"strconv"
@@ -65,8 +64,9 @@ func MinFuelPart2(input string) (_ int, err error) {
 			min = pos
 		}
 	}
+
 	lowestFuel := math.MaxInt
-	for i := min; i < max; i++ {
+	for i := min; i <= max; i++ {
 		bestPos := i
 
 		var fuelUsed int
@@ -88,7 +88,7 @@ func MinFuelPart2(input string) (_ int, err error) {
 	return lowestFuel, nil
 }
 
-func MinFuelPart3(input string) (_ int, err error) {
+func MinFuelPart2_V2(input string) (_ int, err error) {
 	positions := make([]int, 0, 1000)
 
 	sum := 0
@@ -107,16 +107,11 @@ func MinFuelPart3(input string) (_ int, err error) {
 		sum += int(pos)
 
 	}
-	//sort.Ints(positions)
-	//
-	//median := positions[len(positions)/2]
-	bestPos := int(math.Ceil(float64(sum) / float64(len(positions))))
-	//bestPos = +1
-	fmt.Println(bestPos)
+	mean := int(math.Ceil(float64(sum) / float64(len(positions))))
 
 	lowestFuel := math.MaxInt
-	lowestPos := -1
-	for i := 0; i < 1949; i++ {
+	// Somewhere between those two should be lowest fuel number.
+	for i := mean - 1; i <= mean; i++ {
 		bestPos := i
 
 		var fuelUsed int
@@ -132,10 +127,8 @@ func MinFuelPart3(input string) (_ int, err error) {
 
 		if fuelUsed < lowestFuel {
 			lowestFuel = fuelUsed
-			lowestPos = i
 		}
 	}
 
-	fmt.Println(lowestFuel, lowestPos)
 	return lowestFuel, nil
 }

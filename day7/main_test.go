@@ -56,8 +56,8 @@ func TestMinFuelPart2(t *testing.T) {
 				testutil.Ok(t, err)
 				testutil.Equals(t, tcase.expected, int64(ans))
 			})
-			t.Run("MinFuelPart3", func(t *testing.T) {
-				ans, err := MinFuelPart3(input)
+			t.Run("MinFuelPart2_V2", func(t *testing.T) {
+				ans, err := MinFuelPart2_V2(input)
 				testutil.Ok(t, err)
 				testutil.Equals(t, tcase.expected, int64(ans))
 			})
@@ -65,17 +65,15 @@ func TestMinFuelPart2(t *testing.T) {
 	}
 }
 
-/*
-var Answer int64
+var Answer int
 
 // go test -count 5 -run '^$' -bench . -memprofile=v1.mem.pprof -cpuprofile=v1.cpu.pprof > v1.txt
-func BenchmarkSimLanternfish(b *testing.B) {
+func BenchmarkMinFuelPart2(b *testing.B) {
 	b.ReportAllocs()
 	input := strings.TrimSpace(day2.ReadTestInput(b)) + "\n"
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Answer, _ = SimLanternfish_V2(input, 80)
+		Answer, _ = MinFuelPart2_V2(input)
 	}
 }
-*/
