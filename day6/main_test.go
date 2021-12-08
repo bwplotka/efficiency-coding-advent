@@ -52,6 +52,16 @@ func TestSimLanternfish(t *testing.T) {
 				testutil.Ok(t, err)
 				testutil.Equals(t, tcase.expected, ans)
 			})
+			t.Run("SimLanternfish_V3", func(t *testing.T) {
+				ans, err := SimLanternfish_V3(input, tcase.days)
+				testutil.Ok(t, err)
+				testutil.Equals(t, tcase.expected, ans)
+			})
+			t.Run("SimLanternfish_V4", func(t *testing.T) {
+				ans, err := SimLanternfish_V4(input, tcase.days)
+				testutil.Ok(t, err)
+				testutil.Equals(t, tcase.expected, ans)
+			})
 		})
 	}
 }
@@ -65,6 +75,24 @@ func BenchmarkSimLanternfish(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Answer, _ = SimLanternfish_V2(input, 80)
+		Answer, _ = SimLanternfish_V4(input, 256)
 	}
 }
+
+//// go test -count 5 -run '^$' -bench . -memprofile=v1.mem.pprof -cpuprofile=v1.cpu.pprof > v1.txt
+//func BenchmarkParseInt(b *testing.B) {
+//	b.ReportAllocs()
+//
+//	b.Run("std", func(b *testing.B) {
+//		b.ResetTimer()
+//		for i := 0; i < b.N; i++ {
+//			Answer, _ = strconv.ParseInt("1234", 10, 64)
+//		}
+//	})
+//	b.Run("custom", func(b *testing.B) {
+//		b.ResetTimer()
+//		for i := 0; i < b.N; i++ {
+//			Answer, _ = ParseInt("1234")
+//		}
+//	})
+//}

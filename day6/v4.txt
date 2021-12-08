@@ -1,0 +1,11 @@
+goos: linux
+goarch: amd64
+pkg: github.com/bwplotka/efficiency-advent-2021/day6
+cpu: Intel(R) Core(TM) i7-9850H CPU @ 2.60GHz
+BenchmarkSimLanternfish-12    	 2369788	       511.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSimLanternfish-12    	 2435820	       495.2 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSimLanternfish-12    	 2412206	       490.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSimLanternfish-12    	 2426490	       505.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSimLanternfish-12    	 2446710	       491.1 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/bwplotka/efficiency-advent-2021/day6	8.728s
