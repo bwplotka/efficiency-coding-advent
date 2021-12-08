@@ -62,6 +62,11 @@ func TestSimLanternfish(t *testing.T) {
 				testutil.Ok(t, err)
 				testutil.Equals(t, tcase.expected, ans)
 			})
+			t.Run("SimLanternfish_V5", func(t *testing.T) {
+				ans, err := SimLanternfish_V4(input, tcase.days)
+				testutil.Ok(t, err)
+				testutil.Equals(t, tcase.expected, ans)
+			})
 		})
 	}
 }
@@ -75,7 +80,7 @@ func BenchmarkSimLanternfish(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Answer, _ = SimLanternfish_V4(input, 256)
+		Answer, _ = SimLanternfish_V5(input, 256)
 	}
 }
 
