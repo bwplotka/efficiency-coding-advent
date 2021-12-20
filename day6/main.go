@@ -83,7 +83,13 @@ func SimLanternfish_V2(input string, days int) (_ int64, err error) {
 // ParseInt is 3-4x times faster than strconv.ParseInt or Atoi.
 func ParseInt(input string) (n int64, _ error) {
 	factor := int64(1)
-	for i := len(input) - 1; i >= 0; i-- {
+	k := 0
+	if input[0] == '-' {
+		factor *= -1
+		k++
+	}
+
+	for i := len(input) - 1; i >= k; i-- {
 		if input[i] < '0' || input[i] > '9' {
 			return 0, errors.Errorf("not a valid integerer: %v", input)
 		}
@@ -91,7 +97,6 @@ func ParseInt(input string) (n int64, _ error) {
 		n += factor * int64(input[i]-'0')
 		factor *= 10
 	}
-
 	return n, nil
 }
 
