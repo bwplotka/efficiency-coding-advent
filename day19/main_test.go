@@ -200,7 +200,7 @@ func TestHowManyBeaconsPart1(t *testing.T) {
 		{
 			overlapThreshold: 12,
 			input:            day2.ReadTestInput(t), // 30 scanners.
-			expected:         340987,
+			expected:         498,
 		},
 	} {
 		t.Run("", func(t *testing.T) {

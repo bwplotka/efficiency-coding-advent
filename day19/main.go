@@ -3,6 +3,7 @@ package day19
 import (
 	"github.com/bwplotka/efficiency-advent-2021/day6"
 	"github.com/go-gl/mathgl/mgl64"
+	"github.com/pkg/errors"
 )
 
 type vec struct {
@@ -238,11 +239,6 @@ func HowManyBeaconsPart1(input string, overlapThreshold int) (_ int, err error) 
 		transforms[i] = make([]*transform, len(scannerBeacons))
 	}
 
-	allBeacons := map[vec]struct{}{}
-	for _, s0b := range scannerBeacons[0] {
-		allBeacons[vec{int64(s0b.X()), int64(s0b.Y()), int64(s0b.Z())}] = struct{}{}
-	}
-
 	// Find all transforms and hope that all in chained way overlap to 0 :crossed_fingers:
 	// TODO(bwplotka): We could optimize by checking only half and then inverting vice versa transformation.
 	for j := 0; j < len(scannerBeacons); j++ {
@@ -258,24 +254,46 @@ func HowManyBeaconsPart1(input string, overlapThreshold int) (_ int, err error) 
 		}
 	}
 
-	for i := 1; i < len(scannerBeacons); i++ {
-		// Transform all but 0.
-		transformBeacons(transforms, 0, i, scannerBeacons[i])
-		for _, sXb := range scannerBeacons[i] {
+	// First find the first scanner that overlaps with every other scanner, using brute force.
+	// TODO(bwplotka): We could use some graph / tree alg for this (:
+	var i = 0
+outerTransformationFind:
+	for ; i < len(scannerBeacons); i++ {
+		for j := 0; j < len(scannerBeacons); j++ {
+			if j == i {
+				continue
+			}
+			err = transformBeacons(transforms, i, j, nil)
+			if err == nil {
+				break outerTransformationFind
+			}
+		}
+	}
+	if err != nil {
+		return 0, errors.New("no scanner overlaps in direct or indirect manner with every other scanner")
+	}
+
+	allBeacons := map[vec]struct{}{}
+	for j := 0; j < len(scannerBeacons); j++ {
+		if j != i {
+			_ = transformBeacons(transforms, i, j, scannerBeacons[j])
+		}
+		for _, sXb := range scannerBeacons[j] {
 			allBeacons[vec{int64(sXb.X()), int64(sXb.Y()), int64(sXb.Z())}] = struct{}{}
 		}
 	}
-
 	return len(allBeacons), nil
 }
 
-func transformBeacons(transforms [][]*transform, to int, from int, bs []beacon) {
+func transformBeacons(transforms [][]*transform, to int, from int, bs []beacon) error {
 	was := map[int]struct{}{from: {}}
 outer:
 	for {
 		if transforms[to][from] != nil {
-			transforms[to][from].transformInPlace(bs)
-			return
+			if bs != nil {
+				transforms[to][from].transformInPlace(bs)
+			}
+			return nil
 		}
 
 		for i, potentialTo := range transforms {
@@ -287,10 +305,13 @@ outer:
 			}
 
 			was[from] = struct{}{}
-			potentialTo[from].transformInPlace(bs)
+			if bs != nil {
+				potentialTo[from].transformInPlace(bs)
+			}
+
 			from = i
 			continue outer
 		}
-		panic("no chain")
+		return errors.New("no chain, we cannot transform")
 	}
 }
