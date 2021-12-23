@@ -335,3 +335,16 @@ func TestManhattanDistPart2(t *testing.T) {
 		})
 	}
 }
+
+var Answer int
+
+// go test -count 5 -run '^$' -bench . -memprofile=v1.mem.pprof -cpuprofile=v1.cpu.pprof > v1.txt
+func BenchmarkManhattanDistPart2(b *testing.B) {
+	b.ReportAllocs()
+	input := strings.TrimSpace(day2.ReadTestInput(b)) + "\n"
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		Answer, _ = ManhattanDistPart2(input, 12)
+	}
+}
